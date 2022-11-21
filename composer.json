@@ -1,0 +1,6 @@
+{
+  "name": "vendor_name/core-teka-test",
+  "require-dev": {
+    "phpunit/phpunit": "^9.5"
+  }
+}
