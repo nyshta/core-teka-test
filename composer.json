@@ -2,5 +2,13 @@
   "name": "vendor_name/core-teka-test",
   "require-dev": {
     "phpunit/phpunit": "^9.5"
+  },
+  "autoload": {
+    "psr-4": {
+      "CoreTeka\\": "src/CoreTeka/"
+    },
+    "autoload-dev": {
+      "psr-4": { "CoreTekaTests\\": "tests/CoreTekaTests/" }
+    }
   }
 }
