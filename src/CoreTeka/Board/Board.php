@@ -3,8 +3,8 @@
 namespace CoreTeka\Board;
 
 use CoreTeka\Cell\CellInterface;
-use CoreTekaException\CellDoesNotExistsException;
-use CoreTekaException\CellIsOutOfTheBoardException;
+use CoreTeka\Exception\CellDoesNotExistsException;
+use CoreTeka\Exception\CellIsOutOfTheBoardException;
 
 class Board implements BoardInterface
 {

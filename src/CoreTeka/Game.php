@@ -8,9 +8,9 @@ use CoreTeka\Board\BoardInterface;
 use CoreTeka\Cell\CellFactory;
 use CoreTeka\Cell\HoleCellInterface;
 use CoreTeka\Cell\NumberedCellInterface;
-use CoreTekaException\BoardDoesNotExistException;
-use CoreTekaException\CellDoesNotExistsException;
-use CoreTekaException\CellIsOutOfTheBoardException;
+use CoreTeka\Exception\BoardDoesNotExistException;
+use CoreTeka\Exception\CellDoesNotExistsException;
+use CoreTeka\Exception\CellIsOutOfTheBoardException;
 use function PHPUnit\Framework\throwException;
 
 class Game implements GameInterface
@@ -77,7 +77,7 @@ class Game implements GameInterface
             return;
         }
 
-        if ($cell->isItOpened()) {
+        if ($cell->isOpened()) {
             return;
         }
 

@@ -2,7 +2,7 @@
 
 namespace CoreTeka\Cell;
 
-use CoreTekaException\CantOpenTheCell;
+use CoreTeka\Exception\CantOpenTheCellException;
 
 class CellFactory
 {
@@ -25,6 +25,6 @@ class CellFactory
             return new NumberedCell($cell->getX(), $cell->getY(), $cell->getNumber(), true);
         }
 
-        throw new CantOpenTheCell('Cell type has not been defined');
+        throw new CantOpenTheCellException('Cell type has not been defined');
     }
 }

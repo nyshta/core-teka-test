@@ -5,7 +5,7 @@ namespace CoreTeka\Board;
 use CoreTeka\Cell\CellFactory;
 use CoreTeka\Cell\CellInterface;
 use CoreTeka\Cell\HoleCellInterface;
-use CoreTekaException\CellIsOutOfTheBoardException;
+use CoreTeka\Exception\CellIsOutOfTheBoardException;
 
 class BoardBuilder
 {

@@ -8,5 +8,5 @@ interface CellInterface
 
     public function getY(): int;
 
-    public function isItOpened(): bool;
+    public function isOpened(): bool;
 }

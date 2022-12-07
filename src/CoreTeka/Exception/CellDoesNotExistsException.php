@@ -1,6 +1,6 @@
 <?php
 
-namespace CoreTekaException;
+namespace CoreTeka\Exception;
 
 class CellDoesNotExistsException extends \LogicException
 {

@@ -33,7 +33,7 @@ class NumberedCell implements NumberedCellInterface
         return $this->y;
     }
 
-    public function isItOpened(): bool
+    public function isOpened(): bool
     {
         return $this->opened;
     }

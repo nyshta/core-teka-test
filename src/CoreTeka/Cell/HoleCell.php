@@ -30,7 +30,7 @@ class HoleCell implements HoleCellInterface
         return $this->y;
     }
 
-    public function isItOpened(): bool
+    public function isOpened(): bool
     {
         return $this->opened;
     }
