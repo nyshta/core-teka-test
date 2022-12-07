@@ -26,6 +26,8 @@ class Board implements BoardInterface
         $this->high = $high;
         $this->holesNumber = min($holesNumber, $width * $high);
         $this->cells = $cells;
+        // Here is a weak spot: cells should be placed on board based on their inner coordinates.
+        // But let's pretend it's ok, especially because there is a Builder for this class
     }
 
     /**

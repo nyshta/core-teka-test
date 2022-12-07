@@ -22,7 +22,7 @@ class CellFactoryTest extends TestCase
     }
 
     /**
-     * @covers CellFactory::createHole()
+     * @covers \CoreTeka\Cell\CellFactory::createHole
      * @return void
      */
     public function testCreateHole(): void
@@ -35,7 +35,7 @@ class CellFactoryTest extends TestCase
     }
 
     /**
-     * @covers CellFactory::createNumberedCell()
+     * @covers \CoreTeka\Cell\CellFactory::createNumberedCell
      * @return void
      */
     public function testCreateNumberedCell(): void
@@ -49,7 +49,7 @@ class CellFactoryTest extends TestCase
     }
 
     /**
-     * @covers       CellFactory::createOpenedCell()
+     * @covers       \CoreTeka\Cell\CellFactory::createOpenedCell
      * @dataProvider cellProvider
      *
      * @param CellInterface $cell
@@ -71,7 +71,12 @@ class CellFactoryTest extends TestCase
         ];
     }
 
-    public function testCreateOpenedCellWhenUnexpectedType()
+    /**
+     * @covers \CoreTeka\Cell\CellFactory::createOpenedCell
+     *
+     * @return void
+     */
+    public function testCreateOpenedCellWhenUnexpectedType(): void
     {
         $cell = $this->createMock(CellInterface::class);
         self::expectException(CantOpenTheCellException::class);
