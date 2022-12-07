@@ -8,7 +8,14 @@
       "CoreTeka\\": "src/CoreTeka/"
     },
     "autoload-dev": {
-      "psr-4": { "CoreTekaTests\\": "tests/CoreTekaTests/" }
+      "psr-4": {
+        "CoreTekaTests\\": "tests/CoreTekaTests/"
+      }
+    }
+  },
+  "config": {
+    "platform": {
+      "php": "8.1.12"
     }
   }
 }

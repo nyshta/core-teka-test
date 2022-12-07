@@ -7,4 +7,6 @@ interface CellInterface
     public function getX(): int;
 
     public function getY(): int;
+
+    public function isItOpened(): bool;
 }
