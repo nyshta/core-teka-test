@@ -9,8 +9,7 @@ use CoreTeka\Exception\CellIsOutOfTheBoardException;
 
 class BoardBuilder
 {
-    private $cells = [];
-
+    private array $cells;
     private CellFactory $cellFactory;
 
     /**
@@ -21,69 +20,88 @@ class BoardBuilder
         $this->cellFactory = $cellFactory;
     }
 
-    public function createPopulatedBoardWithInitialPoint(BoardInterface $board, int $x, int $y): BoardInterface
+    /**
+     * @param int $width
+     * @param int $high
+     * @param int $holesNumber
+     *
+     * @return \CoreTeka\Board\BoardConfigInterface
+     */
+    public function createBoardConfig(int $width, int $high, int $holesNumber): BoardConfigInterface
     {
-        if (!$board->isThePointOnBoard($x, $y)) {
+        return new BoardConfig($width, $high, $holesNumber);
+    }
+
+    /**
+     * @param \CoreTeka\Board\BoardInterface $board
+     * @param int $x
+     * @param int $y
+     *
+     * @return \CoreTeka\Board\BoardInterface
+     */
+    public function createBoardWithInitialPoint(BoardConfigInterface $config, int $x, int $y): BoardInterface
+    {
+        $this->cells = [];
+
+        if (!$config->isCoordinatesOnBoard($x, $y)) {
             throw new CellIsOutOfTheBoardException();
         }
 
         $initialZeroCell = $this->cellFactory->createNumberedCell($x, $y, 0);
-        $board = $this->insertCell($board, $initialZeroCell);
 
-        $board = $this->populateHolesAroundPoint($board, $x, $y);
-        $board = $this->populateOkCells($board);
+        $board = $this->insertCell(new Board([]), $initialZeroCell);
+        //todo: insert zero cells around the initial point
+
+        $board = $this->populateHolesAroundPoint($config, $board, $x, $y);
+        $board = $this->populateOkCells($config, $board);
 
         return $board;
     }
 
     private function insertCell(BoardInterface $board, CellInterface $cell): BoardInterface
     {
-
         $cells = $board->getCells();
 
         $cells[$cell->getX()][$cell->getY()] = $cell;
 
-        return new Board($board->getWidth(), $board->getHigh(), $board->getHolesNumber(), $cells);
+        return new Board($cells);
     }
 
-    private function populateHolesAroundPoint(BoardInterface $board, int $x, int $y): BoardInterface
-    {
-        for ($i = 0; $i < $board->getHolesNumber(); $i++) {
-            $board = $this->drawRandomHoleAroundPoint($board, $x, $y);
+    private function populateHolesAroundPoint(
+        BoardConfigInterface $config,
+        BoardInterface $board,
+        int $x,
+        int $y
+    ): BoardInterface {
+        for ($holesOnBoard = 0; $holesOnBoard < $config->getHolesNumber(); $holesOnBoard++) {
+            $board = $this->drawRandomHoleAroundPoint($config, $board, $x, $y);
         }
 
         return $board;
     }
 
-    private function drawRandomHoleAroundPoint(BoardInterface $board, int $x, int $y): BoardInterface
-    {
-        $x = $this->getRandExceptAroundPoint($x, $board->getWidth() - 1);
-        $y = $this->getRandExceptAroundPoint($y, $board->getHigh() - 1);
+    private function drawRandomHoleAroundPoint(
+        BoardConfigInterface $config,
+        BoardInterface $board,
+        int $x,
+        int $y
+    ): BoardInterface {
+        $randX = rand(0, $config->getWidth() - 1);
+        $randY = rand(0, $config->getHigh() - 1);
 
-        if (isset($this->cells[$x][$y])) {
-            $board = $this->drawRandomHoleAroundPoint($board, $x, $y);
+        if (isset($this->cells[$randX][$randY])) {
+            $board = $this->drawRandomHoleAroundPoint($config, $board, $x, $y);
         }
 
-        $holeCell = $this->cellFactory->createHole($x, $y);
+        $holeCell = $this->cellFactory->createHole($randX, $randY);
 
         return $this->insertCell($board, $holeCell);
     }
 
-    private function getRandExceptAroundPoint(int $point, int $maxNumber): int
+    private function populateOkCells(BoardConfigInterface $config, BoardInterface $board): BoardInterface
     {
-        $rand = rand(0, $maxNumber);
-
-        if ($rand >= $point - 1 && $rand <= $point + 1) {
-            return $this->getRandExceptAroundPoint($point, $maxNumber);
-        }
-
-        return $rand;
-    }
-
-    private function populateOkCells(BoardInterface $board): BoardInterface
-    {
-        for ($x = 0; $x < $board->getWidth() - 1; $x++) {
-            for ($y = 0; $y < $board->getHigh() - 1; $y++) {
+        for ($x = 0; $x < $config->getWidth() - 1; $x++) {
+            for ($y = 0; $y < $config->getHigh() - 1; $y++) {
 
                 $cell = $board->findCell($x, $y);
                 if ($cell instanceof HoleCellInterface) {
@@ -102,14 +120,14 @@ class BoardBuilder
     private function countHolesAroundPoint(BoardInterface $board, int $x, int $y): int
     {
         $pointsAround = [
-            ['x' => [$x], 'y' => [$y + 1]],
-            ['x' => [$x + 1], 'y' => [$y + 1]],
-            ['x' => [$x + 1], 'y' => [$y]],
-            ['x' => [$x + 1], 'y' => [$y - 1]],
-            ['x' => [$x], 'y' => [$y - 1]],
-            ['x' => [$x - 1], 'y' => [$y - 1]],
-            ['x' => [$x - 1], 'y' => [$y]],
-            ['x' => [$x - 1], 'y' => [$y + 1]],
+            ['x' => $x, 'y' => $y + 1],
+            ['x' => $x + 1, 'y' => $y + 1],
+            ['x' => $x + 1, 'y' => $y],
+            ['x' => $x + 1, 'y' => $y - 1],
+            ['x' => $x, 'y' => $y - 1],
+            ['x' => $x - 1, 'y' => $y - 1],
+            ['x' => $x - 1, 'y' => $y],
+            ['x' => $x - 1, 'y' => $y + 1],
         ];
         $holesNumber = 0;
         foreach ($pointsAround as $point) {
@@ -120,5 +138,23 @@ class BoardBuilder
         }
 
         return $holesNumber;
+    }
+
+    public function createBoardWithReplacedCell(BoardInterface $board, CellInterface $replaceWithCell): BoardInterface
+    {
+        $x = $replaceWithCell->getX();
+        $y = $replaceWithCell->getY();
+
+        $oldCell = $board->findCell($x, $y);
+
+        if (is_null($oldCell)) {
+            return $board;
+        }
+
+        $cells = $board->getCells();
+
+        $cells[$x][$y] = $replaceWithCell;
+
+        return new Board($cells);
     }
 }

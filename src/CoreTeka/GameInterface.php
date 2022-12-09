@@ -3,10 +3,7 @@
 namespace CoreTeka;
 
 use CoreTeka\Board\BoardInterface;
-use CoreTeka\Cell\CellInterface;
-use CoreTeka\Cell\NumberedCellInterface;
-use CoreTeka\Cell\HoleCellInterface;
-use CoreTekaException\BoardDoesNotExistException;
+use CoreTeka\Exception\BoardDoesNotExistException;
 
 interface GameInterface
 {
