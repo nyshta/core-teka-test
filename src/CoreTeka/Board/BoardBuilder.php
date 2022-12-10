@@ -47,15 +47,51 @@ class BoardBuilder
             throw new CellIsOutOfTheBoardException();
         }
 
-        $initialZeroCell = $this->cellFactory->createNumberedCell($x, $y, 0);
-
-        $board = $this->insertCell(new Board([]), $initialZeroCell);
-        //todo: insert zero cells around the initial point
-
-        $board = $this->populateHolesAroundPoint($config, $board, $x, $y);
+        $board = $this->populateInitialZeroCells($config, new Board([]), $x, $y);
+        $board = $this->populateHoles($config, $board);
         $board = $this->populateOkCells($config, $board);
 
         return $board;
+    }
+
+    private function populateInitialZeroCells(BoardConfigInterface $config, BoardInterface $board, int $x, int $y): BoardInterface
+    {
+        $points = array_merge([['x' => $x, 'y' => $y]], $this->getPointsAround($config, $x, $y));
+
+        foreach ($points as $point) {
+            $cell = $this->cellFactory->createNumberedCell($point['x'], $point['y'], 0);
+            $board = $this->insertCell($board, $cell);
+        }
+
+        return $board;
+    }
+
+    /**
+     * @param int $x
+     * @param int $y
+     *
+     * @return \int[][]
+     */
+    private function getPointsAround(BoardConfigInterface $config, int $x, int $y): array
+    {
+        $allPoints = [
+            ['x' => $x, 'y' => $y + 1],
+            ['x' => $x + 1, 'y' => $y + 1],
+            ['x' => $x + 1, 'y' => $y],
+            ['x' => $x + 1, 'y' => $y - 1],
+            ['x' => $x, 'y' => $y - 1],
+            ['x' => $x - 1, 'y' => $y - 1],
+            ['x' => $x - 1, 'y' => $y],
+            ['x' => $x - 1, 'y' => $y + 1],
+        ];
+        $points = [];
+
+        foreach ($allPoints as $point){
+            if($config->isCoordinatesOnBoard($point['x'], $point['y'])){
+                $points[] = $point;
+            }
+        }
+        return $points;
     }
 
     private function insertCell(BoardInterface $board, CellInterface $cell): BoardInterface
@@ -67,30 +103,22 @@ class BoardBuilder
         return new Board($cells);
     }
 
-    private function populateHolesAroundPoint(
-        BoardConfigInterface $config,
-        BoardInterface $board,
-        int $x,
-        int $y
-    ): BoardInterface {
+    private function populateHoles(BoardConfigInterface $config, BoardInterface $board): BoardInterface
+    {
         for ($holesOnBoard = 0; $holesOnBoard < $config->getHolesNumber(); $holesOnBoard++) {
-            $board = $this->drawRandomHoleAroundPoint($config, $board, $x, $y);
+            $board = $this->drawRandomHole($config, $board);
         }
 
         return $board;
     }
 
-    private function drawRandomHoleAroundPoint(
-        BoardConfigInterface $config,
-        BoardInterface $board,
-        int $x,
-        int $y
-    ): BoardInterface {
+    private function drawRandomHole(BoardConfigInterface $config, BoardInterface $board): BoardInterface
+    {
         $randX = rand(0, $config->getWidth() - 1);
         $randY = rand(0, $config->getHigh() - 1);
 
         if (isset($this->cells[$randX][$randY])) {
-            $board = $this->drawRandomHoleAroundPoint($config, $board, $x, $y);
+            $board = $this->drawRandomHole($config, $board);
         }
 
         $holeCell = $this->cellFactory->createHole($randX, $randY);
@@ -104,11 +132,11 @@ class BoardBuilder
             for ($y = 0; $y < $config->getHigh() - 1; $y++) {
 
                 $cell = $board->findCell($x, $y);
-                if ($cell instanceof HoleCellInterface) {
+                if ($cell) {
                     continue;
                 }
 
-                $holesCount = $this->countHolesAroundPoint($board, $x, $y);
+                $holesCount = $this->countHolesAroundPoint($config, $board, $x, $y);
                 $cell = $this->cellFactory->createNumberedCell($x, $y, $holesCount);
                 $board = $this->insertCell($board, $cell);
             }
@@ -117,19 +145,11 @@ class BoardBuilder
         return $board;
     }
 
-    private function countHolesAroundPoint(BoardInterface $board, int $x, int $y): int
+    private function countHolesAroundPoint(BoardConfigInterface $config, BoardInterface $board, int $x, int $y): int
     {
-        $pointsAround = [
-            ['x' => $x, 'y' => $y + 1],
-            ['x' => $x + 1, 'y' => $y + 1],
-            ['x' => $x + 1, 'y' => $y],
-            ['x' => $x + 1, 'y' => $y - 1],
-            ['x' => $x, 'y' => $y - 1],
-            ['x' => $x - 1, 'y' => $y - 1],
-            ['x' => $x - 1, 'y' => $y],
-            ['x' => $x - 1, 'y' => $y + 1],
-        ];
+        $pointsAround = $this->getPointsAround($config, $x, $y);
         $holesNumber = 0;
+
         foreach ($pointsAround as $point) {
             $cell = $board->findCell($point['x'], $point['y']);
             if ($cell instanceof HoleCellInterface) {
