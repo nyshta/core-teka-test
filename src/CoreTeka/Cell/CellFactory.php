@@ -11,9 +11,9 @@ class CellFactory
         return new HoleCell($x, $y);
     }
 
-    public function createNumberedCell(int $x, int $y, int $number): NumberedCellInterface
+    public function createNumberedCell(int $x, int $y, int $number, $opened = false): NumberedCellInterface
     {
-        return new NumberedCell($x, $y, $number);
+        return new NumberedCell($x, $y, $number, $opened);
     }
 
     public function createOpenedCell(CellInterface $cell): CellInterface
