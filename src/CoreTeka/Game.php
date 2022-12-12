@@ -10,7 +10,6 @@ use CoreTeka\Cell\HoleCellInterface;
 use CoreTeka\Cell\NumberedCellInterface;
 use CoreTeka\Exception\BoardDoesNotExistException;
 use CoreTeka\Exception\CellDoesNotExistsException;
-use function PHPUnit\Framework\throwException;
 
 class Game implements GameInterface
 {
@@ -56,8 +55,8 @@ class Game implements GameInterface
      */
     public function openCell(int $x, int $y): void
     {
-        if (empty($this->board)) {
-            throwException(new BoardDoesNotExistException('Cant open any cell before the game started'));
+        if (empty($this->config)) {
+            throw new BoardDoesNotExistException('Cant open any cell before the game started');
         }
 
         if (!$this->config->isCoordinatesOnBoard($x, $y)) {
