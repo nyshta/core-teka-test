@@ -17,7 +17,6 @@ class Game implements GameInterface
     private CellFactory $cellFactory;
     private BoardBuilder $boardBuilder;
     private bool $gameInProgress = false;
-//    private bool $won = false;
 
     /**
      * @param CellFactory $cellFactory
@@ -90,8 +89,6 @@ class Game implements GameInterface
         if ($cell instanceof HoleCellInterface) {
             $this->gameInProgress = false;
         }
-
-        //todo check the game been won
     }
 
     /**

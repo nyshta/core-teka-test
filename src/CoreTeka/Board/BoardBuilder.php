@@ -125,8 +125,9 @@ class BoardBuilder
         $randX = rand(0, $config->getWidth() - 1);
         $randY = rand(0, $config->getHigh() - 1);
 
-        $cellsNumber = count($board->getCells(), COUNT_RECURSIVE); //todo fix
-        if ($cellsNumber == $config->getWidth() * $config->getHigh()) {
+        //stop drawing holes if there is no free space:
+        $cellsOnBoardNumber = $this->countExistingCellsOnBoard($board);
+        if ($cellsOnBoardNumber == $config->getWidth() * $config->getHigh()) {
             return $board;
         }
 
@@ -137,6 +138,18 @@ class BoardBuilder
         $holeCell = $this->cellFactory->createHole($randX, $randY);
 
         return $this->insertOrReplaceCell($board, $holeCell);
+    }
+
+    private function countExistingCellsOnBoard(BoardInterface $board): int
+    {
+        $cells = $board->getCells();
+        $cellsNumber = 0;
+        array_walk_recursive($cells, function ($value) use (&$cellsNumber) {
+            if ($value instanceof CellInterface) {
+                $cellsNumber++;
+            }
+        });
+        return $cellsNumber;
     }
 
     private function populateOkCells(BoardConfigInterface $config, BoardInterface $board): BoardInterface

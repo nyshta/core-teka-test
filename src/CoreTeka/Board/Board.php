@@ -16,9 +16,6 @@ class Board implements BoardInterface
     public function __construct(array $cells)
     {
         $this->cells = $cells;
-        //todo:
-        // Here is a weak spot: cells should be placed on board based on their inner coordinates.
-        // But let's pretend it's ok, especially because there is a Builder for this class
     }
 
     /**

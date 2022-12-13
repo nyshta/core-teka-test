@@ -35,8 +35,4 @@ interface GameInterface
      * @return BoardInterface
      */
     public function getBoard(): BoardInterface;
-
-//    public function isGameInProgress(): bool;
-//
-//    public function haveYouWonTheGame(): bool;
 }
