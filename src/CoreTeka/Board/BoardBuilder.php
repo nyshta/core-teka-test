@@ -59,12 +59,6 @@ class BoardBuilder
         $randX = rand(0, $config->getWidth() - 1);
         $randY = rand(0, $config->getHigh() - 1);
 
-        //stop drawing holes if there is no free space:
-        $cellsOnBoardNumber = $this->countExistingCellsOnBoard($board);
-        if ($cellsOnBoardNumber == $config->getWidth() * $config->getHigh()) {
-            return $board;
-        }
-
         if ($board->findCell($randX, $randY)) {
             return $this->drawRandomHole($config, $board);
         }
