@@ -23,7 +23,7 @@ class GameTest extends TestCase
         $cellFactory = new CellFactory();
         $this->boardBuilder = $this->getMockBuilder(BoardBuilder::class)
         ->disableOriginalConstructor()
-        ->onlyMethods(['createBoardWithInitialPoint'])->getMock();
+        ->onlyMethods(['createBoard'])->getMock();
 
         $this->game = new Game($cellFactory, $this->boardBuilder);
     }
@@ -47,7 +47,7 @@ class GameTest extends TestCase
     {
         $board = $this->createBoard();
         $this->boardBuilder->expects(self::once())
-            ->method('createBoardWithInitialPoint')
+            ->method('createBoard')
             ->willReturn($this->createBoard());
 
         $this->game->initiateBoard(3,3,1);
@@ -65,7 +65,7 @@ class GameTest extends TestCase
     {
         $board = $this->createBoard();
         $this->boardBuilder->expects(self::once())
-            ->method('createBoardWithInitialPoint')
+            ->method('createBoard')
             ->willReturn($this->createBoard());
 
         $this->game->initiateBoard(3,3,1);
@@ -95,7 +95,7 @@ class GameTest extends TestCase
     {
         $board = $this->createBoard();
         $this->boardBuilder->expects(self::once())
-            ->method('createBoardWithInitialPoint')
+            ->method('createBoard')
             ->willReturn($this->createBoard());
 
         $this->game->initiateBoard(3,3,1);
@@ -119,7 +119,7 @@ class GameTest extends TestCase
     {
         $board = $this->createBoard();
         $this->boardBuilder->expects(self::once())
-            ->method('createBoardWithInitialPoint')
+            ->method('createBoard')
             ->willReturn($this->createBoard());
 
         $this->game->initiateBoard(3,3,1);

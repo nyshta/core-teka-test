@@ -3,6 +3,7 @@
 namespace CoreTekaTests\Board;
 
 use CoreTeka\Board\BoardConfig;
+use CoreTeka\Exception\TooMuchHolesException;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -14,34 +15,25 @@ class BoardConfigTest extends TestCase
     const HIGH = 10;
 
     /**
-     * @dataProvider holesProvider
-     *
-     * @param int $putHolesOnBoard
-     * @param int $expectedHolesNumber
-     *
+     * @covers \CoreTeka\Board\BoardConfig::__construct
      * @return void
      */
-    public function testConstruct(int $putHolesOnBoard, int $expectedHolesNumber): void
+    public function testConstruct(): void
     {
-        $config = new BoardConfig(self::WIDTH, self::HIGH, $putHolesOnBoard);
+        $config = new BoardConfig(self::WIDTH, self::HIGH, 30);
         $actualHolesNumber = $config->getHolesNumber();
 
-        self::assertEquals($expectedHolesNumber, $actualHolesNumber);
+        self::assertEquals(30, $actualHolesNumber);
 
     }
-
-    public function holesProvider(): array
+    /**
+     * @covers \CoreTeka\Board\BoardConfig::__construct
+     * @return void
+     */
+    public function testConstructWhenTooMuchHoles(): void
     {
-        return [
-            'ok holes number' => [
-                'putHolesOnBoard' => 30,
-                'expectedHolesNumber' => 30,
-            ],
-            'too much holes' => [
-                'putHolesOnBoard' => 200,
-                'expectedHolesNumber' => self::WIDTH * self::HIGH,
-            ],
-        ];
+        self::expectException(TooMuchHolesException::class);
+        new BoardConfig(self::WIDTH, self::HIGH, 200);
     }
 
     /**

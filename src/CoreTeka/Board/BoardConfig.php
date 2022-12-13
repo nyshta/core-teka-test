@@ -2,6 +2,8 @@
 
 namespace CoreTeka\Board;
 
+use CoreTeka\Exception\TooMuchHolesException;
+
 class BoardConfig implements BoardConfigInterface
 {
     private int $width;
@@ -15,9 +17,12 @@ class BoardConfig implements BoardConfigInterface
      */
     public function __construct(int $width, int $high, int $holesNumber)
     {
+        if($holesNumber > $width * $high) {
+            throw new TooMuchHolesException();
+        }
         $this->width = $width;
         $this->high = $high;
-        $this->holesNumber = min($holesNumber, $width * $high);
+        $this->holesNumber = $holesNumber;
     }
 
     /**

@@ -14,6 +14,8 @@ interface GameInterface
      * @param int $high
      * @param int $holesNumber
      *
+     * @throws \CoreTeka\Exception\TooMuchHolesException
+     *
      * @return void
      */
     public function initiateBoard(int $width, int $high, int $holesNumber): void;

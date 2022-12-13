@@ -6,6 +6,7 @@ use CoreTeka\Board\BoardBuilder;
 use CoreTeka\Cell\CellFactory;
 use CoreTeka\Cell\CellInterface;
 use CoreTeka\Cell\HoleCellInterface;
+use CoreTeka\Cell\NumberedCellInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -38,19 +39,19 @@ class BoardBuilderTest extends TestCase
     }
 
     /**
-     * @covers \CoreTeka\Board\BoardBuilder::createBoardWithInitialPoint
+     * @covers \CoreTeka\Board\BoardBuilder::createBoard
      *
      * @return void
      */
-    public function testCreateBoardWithInitialPointWhenTotalCellsNumberShouldBeCorrect(): void
+    public function testCreateBoardWhenCheckingTotalCellsNumber(): void
     {
         $config = $this->builder->createBoardConfig(3, 3, 1);
-        $board = $this->builder->createBoardWithInitialPoint($config, 2, 2);
+        $board = $this->builder->createBoard($config);
 
         $cells = $board->getCells();
         $cellsNumber = 0;
-        array_walk_recursive($cells, function ($value) use (&$cellsNumber) {
-            if ($value instanceof CellInterface) {
+        array_walk_recursive($cells, function ($cell) use (&$cellsNumber) {
+            if ($cell instanceof CellInterface) {
                 $cellsNumber++;
             }
         });
@@ -60,17 +61,17 @@ class BoardBuilderTest extends TestCase
 
     /**
      * @dataProvider allCellsCoordinatesProvider
-     * @covers       \CoreTeka\Board\BoardBuilder::createBoardWithInitialPoint
+     * @covers       \CoreTeka\Board\BoardBuilder::createBoard
      *
      * @param int $x
      * @param int $y
      *
      * @return void
      */
-    public function testCreateBoardWithInitialPointWhenCellsCoordinatesShouldBeCorrect(int $x, int $y): void
+    public function testCreateBoardWhenCheckingCellsMapping(int $x, int $y): void
     {
         $config = $this->builder->createBoardConfig(3, 3, 1);
-        $board = $this->builder->createBoardWithInitialPoint($config, 2, 2);
+        $board = $this->builder->createBoard($config);
 
         $cell = $board->findCell($x, $y);
         self::assertNotEmpty($cell);
@@ -93,70 +94,52 @@ class BoardBuilderTest extends TestCase
         ];
     }
 
-    /**
-     * @covers \CoreTeka\Board\BoardBuilder::createBoardWithInitialPoint
-     *
-     * @return void
-     */
-    public function testCreateBoardWithInitialPointWhenInitialPointOpensCorrectly(): void
+    public function testCreateBoardWhenCheckingHoleNumbers()
     {
-        $config = $this->builder->createBoardConfig(3, 3, 1);
-        $board = $this->builder->createBoardWithInitialPoint($config, 2, 2);
+        $config = $this->builder->createBoardConfig(3, 3, 4);
+        $board = $this->builder->createBoard($config);
 
-        /** @var \CoreTeka\Cell\NumberedCellInterface $initialPoint */
-        $initialPoint = $board->getCell(2, 2);
-        self::assertEquals(0, $initialPoint->getNumber());
+        $cells = $board->getCells();
+        $totalHolesNumber = 0;
 
-        self::assertTrue($initialPoint->isOpened());
-        self::assertTrue($board->getCell(1, 2)->isOpened());
-        self::assertTrue($board->getCell(1, 1)->isOpened());
-        self::assertTrue($board->getCell(2, 1)->isOpened());
+        array_walk_recursive($cells, function ($cell) use (&$totalHolesNumber) {
+            if ($cell instanceof HoleCellInterface) {
+                $totalHolesNumber++;
+            }
+        });
 
-        self::assertFalse($board->getCell(0, 2)->isOpened());
-        self::assertFalse($board->getCell(0, 1)->isOpened());
-        self::assertFalse($board->getCell(0, 0)->isOpened());
-        self::assertFalse($board->getCell(1, 0)->isOpened());
-        self::assertFalse($board->getCell(2, 0)->isOpened());
+        self::assertEquals(4, $totalHolesNumber);
     }
 
     /**
-     * @covers \CoreTeka\Board\BoardBuilder::createBoardWithInitialPoint
+     * @covers \CoreTeka\Board\BoardBuilder::createBoard
      *
      * @return void
      */
-    public function testCreateBoardWithInitialPointWhenTheHoleExistsWithNumberedCells(): void
+    public function testCreateBoardWhenCheckingNumberedCells(): void
     {
-        $config = $this->builder->createBoardConfig(3, 3, 1);
-        $board = $this->builder->createBoardWithInitialPoint($config, 2, 2);
+        $config = $this->builder->createBoardConfig(3, 3, 4);
+        $board = $this->builder->createBoard($config);
 
-        $holeField = [
-            ['x' => 0, 'y' => 2],
-            ['x' => 0, 'y' => 1],
-            ['x' => 0, 'y' => 0],
-            ['x' => 1, 'y' => 0],
-            ['x' => 2, 'y' => 0],
-        ];
+        $cells = $board->getCells();
 
-        $hole = null;
-        foreach ($holeField as $coordinates) {
-            $cell = $board->getCell($coordinates['x'], $coordinates['y']);
+        array_walk_recursive($cells, function ($cell) use ($board) {
             if ($cell instanceof HoleCellInterface) {
-                $hole = $cell;
-                break;
+                return;
             }
-        }
+            $holeNumbers = 0;
+            foreach ($this->pointsAround($cell->getX(), $cell->getY()) as $point) {
+                if ($board->findCell($point['x'], $point['y']) instanceof HoleCellInterface) {
+                    $holeNumbers++;
+                }
+            }
+            self::assertEquals($holeNumbers, $cell->getNumber());
+        });
+    }
 
-        //check the hole exists and it's not opened:
-        self::assertNotEmpty($hole);
-        self::assertFalse($hole->isOpened());
-
-        $x = $hole->getX();
-        $y = $hole->getY();
-
-        $uncheckedPoints = $holeField;
-        unset($uncheckedPoints[array_search(['x' => $x, 'y' => $y], $uncheckedPoints)]);
-
-        $pointsAroundHole = [
+    private function pointsAround(int $x, int $y): array
+    {
+        return [
             ['x' => $x, 'y' => $y + 1],
             ['x' => $x + 1, 'y' => $y + 1],
             ['x' => $x + 1, 'y' => $y],
@@ -166,36 +149,6 @@ class BoardBuilderTest extends TestCase
             ['x' => $x - 1, 'y' => $y],
             ['x' => $x - 1, 'y' => $y + 1],
         ];
-
-        foreach ($pointsAroundHole as $aroundHolePoint) {
-            if ($config->isCoordinatesOnBoard($aroundHolePoint['x'], $aroundHolePoint['y'])) {
-                /** @var \CoreTeka\Cell\NumberedCellInterface $aroundHoleCell */
-                $aroundHoleCell = $board->getCell($aroundHolePoint['x'], $aroundHolePoint['y']);
-
-                if (in_array($aroundHolePoint, $uncheckedPoints)) {
-                    //check the cell near the hole is not opened (corner cells could be opened):
-                    self::assertFalse($aroundHoleCell->isOpened());
-                    unset(
-                        $uncheckedPoints[array_search(
-                            ['x' => $aroundHolePoint['x'], 'y' => $aroundHolePoint['y']],
-                            $uncheckedPoints
-                        )]
-                    );
-                }
-
-                //check the cell around the hole is numbered with 1:
-                self::assertEquals(1, $aroundHoleCell->getNumber());
-            }
-        }
-
-        //check all the rest of unchecked points are numbered with 0 and not opened
-        foreach ($uncheckedPoints as $uncheckedPoint)
-        {
-            /** @var \CoreTeka\Cell\NumberedCellInterface $zeroCell */
-            $zeroCell = $board->getCell($uncheckedPoint['x'], $uncheckedPoint['y']);
-            self::assertEquals(0, $zeroCell->getNumber());
-            self::assertFalse($zeroCell->isOpened());
-        }
     }
 
     /**
@@ -206,23 +159,23 @@ class BoardBuilderTest extends TestCase
     public function testCreateBoardWithReplacedCell(): void
     {
         $config = $this->builder->createBoardConfig(3, 3, 1);
-        $board = $this->builder->createBoardWithInitialPoint($config, 2, 2);
+        $board = $this->builder->createBoard($config);
 
-        $cell = $board->getCell(0,0);
+        $cell = $board->getCell(0, 0);
         self::assertFalse($cell->isOpened());
 
         $newCell = $this->cellFactory->createOpenedCell($cell);
 
         $newBoard = $this->builder->createBoardWithReplacedCell($board, $newCell);
 
-        self::assertEquals($newCell, $newBoard->getCell(0,0));
-        self::assertEquals($board->getCell(0,1), $newBoard->getCell(0,1));
-        self::assertEquals($board->getCell(0,2), $newBoard->getCell(0,2));
-        self::assertEquals($board->getCell(1,0), $newBoard->getCell(1,0));
-        self::assertEquals($board->getCell(1,1), $newBoard->getCell(1,1));
-        self::assertEquals($board->getCell(1,2), $newBoard->getCell(1,2));
-        self::assertEquals($board->getCell(2,0), $newBoard->getCell(2,0));
-        self::assertEquals($board->getCell(2,1), $newBoard->getCell(2,1));
-        self::assertEquals($board->getCell(2,2), $newBoard->getCell(2,2));
+        self::assertEquals($newCell, $newBoard->getCell(0, 0));
+        self::assertEquals($board->getCell(0, 1), $newBoard->getCell(0, 1));
+        self::assertEquals($board->getCell(0, 2), $newBoard->getCell(0, 2));
+        self::assertEquals($board->getCell(1, 0), $newBoard->getCell(1, 0));
+        self::assertEquals($board->getCell(1, 1), $newBoard->getCell(1, 1));
+        self::assertEquals($board->getCell(1, 2), $newBoard->getCell(1, 2));
+        self::assertEquals($board->getCell(2, 0), $newBoard->getCell(2, 0));
+        self::assertEquals($board->getCell(2, 1), $newBoard->getCell(2, 1));
+        self::assertEquals($board->getCell(2, 2), $newBoard->getCell(2, 2));
     }
 }

@@ -5,7 +5,6 @@ namespace CoreTeka\Board;
 use CoreTeka\Cell\CellFactory;
 use CoreTeka\Cell\CellInterface;
 use CoreTeka\Cell\HoleCellInterface;
-use CoreTeka\Exception\CellIsOutOfTheBoardException;
 
 class BoardBuilder
 {
@@ -38,33 +37,96 @@ class BoardBuilder
      *
      * @return \CoreTeka\Board\BoardInterface
      */
-    public function createBoardWithInitialPoint(BoardConfigInterface $config, int $x, int $y): BoardInterface
+    public function createBoard(BoardConfigInterface $config): BoardInterface
     {
-        if (!$config->isCoordinatesOnBoard($x, $y)) {
-            throw new CellIsOutOfTheBoardException();
-        }
-
-        $board = $this->populateInitialZeroCells($config, new Board([]), $x, $y);
-        $board = $this->populateHoles($config, $board);
+        $board = $this->populateHoles($config, new Board([]));
         $board = $this->populateOkCells($config, $board);
 
         return $board;
     }
 
-    private function populateInitialZeroCells(
-        BoardConfigInterface $config,
-        BoardInterface $board,
-        int $x,
-        int $y
-    ): BoardInterface {
-        $points = array_merge([['x' => $x, 'y' => $y]], $this->getPointsAround($config, $x, $y));
-
-        foreach ($points as $point) {
-            $cell = $this->cellFactory->createNumberedCell($point['x'], $point['y'], 0, true);
-            $board = $this->insertOrReplaceCell($board, $cell);
+    private function populateHoles(BoardConfigInterface $config, BoardInterface $board): BoardInterface
+    {
+        for ($holesOnBoard = 0; $holesOnBoard < $config->getHolesNumber(); $holesOnBoard++) {
+            $board = $this->drawRandomHole($config, $board);
         }
 
         return $board;
+    }
+
+    private function drawRandomHole(BoardConfigInterface $config, BoardInterface $board): BoardInterface
+    {
+        $randX = rand(0, $config->getWidth() - 1);
+        $randY = rand(0, $config->getHigh() - 1);
+
+        //stop drawing holes if there is no free space:
+        $cellsOnBoardNumber = $this->countExistingCellsOnBoard($board);
+        if ($cellsOnBoardNumber == $config->getWidth() * $config->getHigh()) {
+            return $board;
+        }
+
+        if ($board->findCell($randX, $randY)) {
+            return $this->drawRandomHole($config, $board);
+        }
+
+        $holeCell = $this->cellFactory->createHole($randX, $randY);
+
+        return $this->insertCell($board, $holeCell);
+    }
+
+    private function insertCell(BoardInterface $board, CellInterface $cell): BoardInterface
+    {
+        $cells = $board->getCells();
+
+        $cells[$cell->getX()][$cell->getY()] = $cell;
+
+        return new Board($cells);
+    }
+
+    private function countExistingCellsOnBoard(BoardInterface $board): int
+    {
+        $cells = $board->getCells();
+        $cellsNumber = 0;
+        array_walk_recursive($cells, function ($value) use (&$cellsNumber) {
+            if ($value instanceof CellInterface) {
+                $cellsNumber++;
+            }
+        });
+        return $cellsNumber;
+    }
+
+    private function populateOkCells(BoardConfigInterface $config, BoardInterface $board): BoardInterface
+    {
+        for ($x = 0; $x < $config->getWidth(); $x++) {
+            for ($y = 0; $y < $config->getHigh(); $y++) {
+
+                $cell = $board->findCell($x, $y);
+                if ($cell instanceof HoleCellInterface) {
+                    continue;
+                }
+
+                $holesCount = $this->countHolesAroundPoint($config, $board, $x, $y);
+                $cell = $this->cellFactory->createNumberedCell($x, $y, $holesCount);
+                $board = $this->insertCell($board, $cell);
+            }
+        }
+
+        return $board;
+    }
+
+    private function countHolesAroundPoint(BoardConfigInterface $config, BoardInterface $board, int $x, int $y): int
+    {
+        $pointsAround = $this->getPointsAround($config, $x, $y);
+        $holesNumber = 0;
+
+        foreach ($pointsAround as $point) {
+            $cell = $board->findCell($point['x'], $point['y']);
+            if ($cell instanceof HoleCellInterface) {
+                $holesNumber++;
+            }
+        }
+
+        return $holesNumber;
     }
 
     /**
@@ -94,96 +156,6 @@ class BoardBuilder
         }
 
         return $points;
-    }
-
-    private function insertOrReplaceCell(BoardInterface $board, CellInterface $cell): BoardInterface
-    {
-        $existingCell = $board->findCell($cell->getX(), $cell->getY());
-
-        if ($existingCell && $existingCell->isOpened()) {
-            $cell = $this->cellFactory->createOpenedCell($cell);
-        }
-
-        $cells = $board->getCells();
-
-        $cells[$cell->getX()][$cell->getY()] = $cell;
-
-        return new Board($cells);
-    }
-
-    private function populateHoles(BoardConfigInterface $config, BoardInterface $board): BoardInterface
-    {
-        for ($holesOnBoard = 0; $holesOnBoard < $config->getHolesNumber(); $holesOnBoard++) {
-            $board = $this->drawRandomHole($config, $board);
-        }
-
-        return $board;
-    }
-
-    private function drawRandomHole(BoardConfigInterface $config, BoardInterface $board): BoardInterface
-    {
-        $randX = rand(0, $config->getWidth() - 1);
-        $randY = rand(0, $config->getHigh() - 1);
-
-        //stop drawing holes if there is no free space:
-        $cellsOnBoardNumber = $this->countExistingCellsOnBoard($board);
-        if ($cellsOnBoardNumber == $config->getWidth() * $config->getHigh()) {
-            return $board;
-        }
-
-        if ($board->findCell($randX, $randY)) {
-            return $this->drawRandomHole($config, $board);
-        }
-
-        $holeCell = $this->cellFactory->createHole($randX, $randY);
-
-        return $this->insertOrReplaceCell($board, $holeCell);
-    }
-
-    private function countExistingCellsOnBoard(BoardInterface $board): int
-    {
-        $cells = $board->getCells();
-        $cellsNumber = 0;
-        array_walk_recursive($cells, function ($value) use (&$cellsNumber) {
-            if ($value instanceof CellInterface) {
-                $cellsNumber++;
-            }
-        });
-        return $cellsNumber;
-    }
-
-    private function populateOkCells(BoardConfigInterface $config, BoardInterface $board): BoardInterface
-    {
-        for ($x = 0; $x < $config->getWidth(); $x++) {
-            for ($y = 0; $y < $config->getHigh(); $y++) {
-
-                $cell = $board->findCell($x, $y);
-                if ($cell instanceof HoleCellInterface) {
-                    continue;
-                }
-
-                $holesCount = $this->countHolesAroundPoint($config, $board, $x, $y);
-                $cell = $this->cellFactory->createNumberedCell($x, $y, $holesCount);
-                $board = $this->insertOrReplaceCell($board, $cell);
-            }
-        }
-
-        return $board;
-    }
-
-    private function countHolesAroundPoint(BoardConfigInterface $config, BoardInterface $board, int $x, int $y): int
-    {
-        $pointsAround = $this->getPointsAround($config, $x, $y);
-        $holesNumber = 0;
-
-        foreach ($pointsAround as $point) {
-            $cell = $board->findCell($point['x'], $point['y']);
-            if ($cell instanceof HoleCellInterface) {
-                $holesNumber++;
-            }
-        }
-
-        return $holesNumber;
     }
 
     public function createBoardWithReplacedCell(BoardInterface $board, CellInterface $replaceWithCell): BoardInterface

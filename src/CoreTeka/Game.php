@@ -33,11 +33,9 @@ class Game implements GameInterface
      */
     public function initiateBoard(int $width, int $high, int $holesNumber): void
     {
-        $holesNumber = $holesNumber >= $width * $high
-            ? $width * $high - 9  // at least first click on board should be ok
-            : $holesNumber;
-
         $this->config = $this->boardBuilder->createBoardConfig($width, $high, $holesNumber);
+        $this->board = $this->boardBuilder->createBoard($this->config);
+        $this->gameInProgress = true;
     }
 
     /**
@@ -59,12 +57,6 @@ class Game implements GameInterface
 
         if (!$this->config->isCoordinatesOnBoard($x, $y)) {
             return;
-        }
-
-        if(empty($this->board))
-        {
-            $this->gameInProgress = true;
-            $this->board = $this->boardBuilder->createBoardWithInitialPoint($this->config, $x, $y);
         }
 
         if (!$this->gameInProgress) {
