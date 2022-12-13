@@ -9,7 +9,6 @@ use CoreTeka\Cell\CellFactory;
 use CoreTeka\Cell\HoleCellInterface;
 use CoreTeka\Cell\NumberedCellInterface;
 use CoreTeka\Exception\BoardDoesNotExistException;
-use CoreTeka\Exception\CellDoesNotExistsException;
 
 class Game implements GameInterface
 {
@@ -63,9 +62,8 @@ class Game implements GameInterface
             return;
         }
 
-        try {
-            $cell = $this->board->getCell($x, $y);
-        } catch (CellDoesNotExistsException) {
+        if(empty($this->board))
+        {
             $this->gameInProgress = true;
             $this->board = $this->boardBuilder->createBoardWithInitialPoint($this->config, $x, $y);
         }
@@ -73,6 +71,8 @@ class Game implements GameInterface
         if (!$this->gameInProgress) {
             return;
         }
+
+        $cell = $this->board->getCell($x, $y);
 
         if ($cell->isOpened()) {
             return;
