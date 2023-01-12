@@ -1,5 +1,5 @@
 {
-  "name": "vendor_name/core-teka-test",
+  "name": "nyshta/core-teka-test",
   "require-dev": {
     "phpunit/phpunit": "^9.5"
   },
